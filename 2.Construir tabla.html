@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+       <meta charset="UTF-8">
+       <title> DIBUJAMOS UNA TABLA  </title>
+    </head>
+    <body>
+        <style>
+            table{
+               border-collapse: collapse;
+               width: 100%; 
+            }
+            td{
+                border: 3px solid red;
+            }
+            
+       </style>
+        <table>
+            <script>
+
+                let fila = parseFloat(prompt("Cuantas filas quieres:"))
+                let columna = parseFloat(prompt("Cuantas columnas quieres:"))
+
+                for (let index = 0; index < fila; index++) {
+                    document.write("<tr>")
+
+                    for (let index = 0; index < columna; index++) {
+                        document.write("<td>Agustin</td>")        
+                    
+                    }
+                    
+                    document.write("</tr>")
+                    
+                }
+
+            </script>
+        </table>
+        
+    </body>
+</html>
+
+
