@@ -16,8 +16,8 @@ function carrito() {
    
 }
 
+// Guarda la información del curso seleccionado en el array "cursos"
 function guardarCurso(e) {
-
     const infoCurso = e.target.parentElement.parentElement;
 
     const imgCurso = infoCurso.querySelector('img').src;
@@ -30,62 +30,58 @@ function guardarCurso(e) {
     const existe = cursos.some(curso => curso.id === id);
 
     if (existe) {
-    
         cursos[id].cant++;
-
     } else {
-        
         const curso = {
-        imagen: imgCurso,
-        titulo: titulo,
-        prov: prov,
-        estrella: estrella,
-        precio: precio,
-        id: id,
-        cant: 1,
-    };
+            imagen: imgCurso,
+            titulo: titulo,
+            prov: prov,
+            estrella: estrella,
+            precio: precio,
+            id: id,
+            cant: 1,
+        };
 
         cursos[id] = curso;
     }
 
     console.table(cursos);
-
 }
 
+// Actualiza la tabla del carrito con los cursos agregados
 function agregarCarrito() {
     const carrito = document.querySelector('#carrito tbody');
-
     let carro = '';
 
     cursos.forEach(element => {
-
-            carro += '<tr><td><img src = "'+element.imagen+'" width = "100"></td><td>'+element.titulo+'</td><td>'+element.precio+'</td><td>'+element.cant+'</td><td><a href="#" class="borrar-curso" data-id="'+element.id+'"> X </a></td></tr>';
-        
+        if (element) { // Verifica que el elemento exista
+            carro += '<tr><td><img src="' + element.imagen + '" width="100"></td><td>' + element.titulo + '</td><td>' + element.precio + '</td><td>' + element.cant + '</td><td><a href="#" class="borrar-curso" data-id="' + element.id + '"> X </a></td></tr>';
+        }
     });
-    
+
     carrito.innerHTML = carro;
 }
 
-
+// Vacía completamente el carrito y limpia la tabla
 function borrarCarrito() {
     const carrito = document.querySelector('#carrito tbody');
-
     cursos.length = 0;
     carrito.innerHTML = "";
 }
 
+// Quita una unidad de un curso del carrito o lo elimina si queda a cero
 function quitar1Curso(e) {
-    id = parseInt(e.target.getAttribute('data-id'));
+    const id = parseInt(e.target.getAttribute('data-id'));
     
     if (cursos[id].cant === 1) {
         borrarCurso(id);
     } else {
-        cursos[id].cant--; 
+        cursos[id].cant--;
         agregarCarrito();
     }
-    
 }
 
+// Elimina un curso del carrito por completo y actualiza la tabla
 function borrarCurso(id) {
     delete cursos[id];
     agregarCarrito();
