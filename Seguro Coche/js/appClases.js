@@ -62,30 +62,43 @@ class Poliza {
     }
 
 
-  mostrarInfoHTML() {
-    const modalElement = document.getElementById('modal');
-    const modal = new bootstrap.Modal(modalElement, { backdrop: 'static', keyboard: false });
+    mostrarInfoHTML() {
+        const modalElement = document.getElementById('modal');
+        const modal = new bootstrap.Modal(modalElement, { backdrop: 'static', keyboard: false });
 
-    const modalTitle = modalElement.querySelector('.modal-title');
-    const modalBody = modalElement.querySelector('.modal-body');
-    const modalFooter = modalElement.querySelector('.modal-footer');
+        const modalHeader = modalElement.querySelector('.modal-header');
+        const modalBody = modalElement.querySelector('.modal-body');
+        const modalFooter = modalElement.querySelector('.modal-footer');
 
-    modalTitle.innerHTML = `<h5 class="header col">RESUMEN DE PÓLIZA</h5>`;
-    modalBody.innerHTML = `
-        <p class="font-bold">Gama: ${this._gama}%</p>
-        <p class="font-bold">Año del vehículo: ${this._year}</p>
-        <p class="font-bold">Tipo de cobertura: ${this._cobertura === 0 ? "Básico":"Completo"}</p>
-        <p class="font-bold">Importe total: <strong>${this._importe} €</strong></p>
-    `;
+        let tipo = "";
 
-    // Botón de cierre
-    modalFooter.innerHTML = '';
-    const cerrarBtn = document.createElement('button');
-    cerrarBtn.classList.add('btn', 'btn-primary', 'btn-raised', 'col');
-    cerrarBtn.textContent = 'Cerrar';
-    cerrarBtn.addEventListener('click', () => modal.hide());
-    modalFooter.appendChild(cerrarBtn);
+        switch (this._gama) {
+            case 5:
+            tipo = "Gama Baja";
+                break;
+            case 15:
+            tipo = "Gama Media";    
+                break;
+            case 30:
+            tipo = "Gama Alta";    
+                break;
+        }
 
-    modal.show();
+        modalHeader.innerHTML = `<h1 class="header col">RESUMEN DE PÓLIZA</h1>`;
+        modalBody.innerHTML = `
+            <p class="font-bold">TIPO: ${tipo}</p>
+            <p class="font-bold">AÑO: ${this._year}</p>
+            <p class="font-bold">COBERTURA: ${this._cobertura === 0 ? "Básico":"Completo"}</p>
+            <p class="font-bold">TOTAL: <strong>${this._importe} €</strong></p>
+        `;
+
+        modalFooter.innerHTML = '';
+        const cerrarBtn = document.createElement('button');
+        cerrarBtn.classList.add('btn', 'btn-primary', 'btn-raised', 'col');
+        cerrarBtn.textContent = 'Cerrar';
+        cerrarBtn.addEventListener('click', () => modal.hide());
+        modalFooter.appendChild(cerrarBtn);
+
+        modal.show();
 }
 }
