@@ -19,10 +19,12 @@ function ponerYear() {
 }
 
 function seguro() {
-    document.querySelector('[type=submit]').addEventListener('click', comprobarCampos);
+    document.querySelector('[type=submit]').addEventListener('click', (e) => {comprobarCampos(e)});
 }
 
-function comprobarCampos() {
+function comprobarCampos(e) {
+    e.preventDefault();
+
     const tipo = document.querySelector("#gama");
     const year = document.querySelector("#year");
 

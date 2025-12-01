@@ -12,6 +12,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let cursos = [];
 
+cursos = JSON.parse(localStorage.getItem('cursos')) || [];
+agregarCarrito();
+
+
+//localStorage.clear();
+
+console.log(cursos);
+
+
 function carrito() {
     const botones = document.querySelectorAll('.agregar-carrito');
 
@@ -27,7 +36,6 @@ function carrito() {
 // Guarda la información del curso seleccionado en el array "cursos"
 function guardarCurso(e) {
     e.preventDefault();
-    
     const infoCurso = e.target.parentElement.parentElement;
 
     const imgCurso = infoCurso.querySelector('img').src;
@@ -63,6 +71,8 @@ function agregarCarrito() {
     const carrito = document.querySelector('#carrito tbody');
     let carro = '';
 
+    localStorage.removeItem('cursos');
+
     cursos.forEach(element => {
         if (element) { // Verifica que el elemento exista
             carro += '<tr><td><img src="' + element.imagen + '" width="100"></td><td>' + element.titulo + '</td><td>' + element.precio + '</td><td>' + element.cant + '</td><td><a href="#" class="borrar-curso" data-id="' + element.id + '"> X </a></td></tr>';
@@ -71,8 +81,7 @@ function agregarCarrito() {
 
     carrito.innerHTML = carro;
 
-    // Guardar carrito en localStorage
-    localStorage.setItem('carrito', JSON.stringify(cursos));
+    localStorage.setItem('cursos', JSON.stringify(cursos));
 }
 
 // Vacía completamente el carrito y limpia la tabla
@@ -81,8 +90,9 @@ function borrarCarrito() {
     cursos.length = 0;
     carrito.innerHTML = "";
 
-    // Vaciar localStorage también
-    localStorage.removeItem('carrito');
+    localStorage.setItem('cursos', JSON.stringify(cursos));
+
+
 }
 
 // Quita una unidad de un curso del carrito o lo elimina si queda a cero
@@ -100,6 +110,7 @@ function quitar1Curso(e) {
             agregarCarrito();
         }
     }
+
 }
 
 // Elimina un curso del carrito por completo y actualiza la tabla
