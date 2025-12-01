@@ -19,15 +19,23 @@ function ponerYear() {
 }
 
 function seguro() {
-    document.querySelector('#cotizar-seguro').addEventListener('submit', comprobarCampos);
+    document.querySelector('[type=submit]').addEventListener('click', comprobarCampos);
 }
 
 function comprobarCampos() {
     const tipo = document.querySelector("#gama");
     const year = document.querySelector("#year");
 
+    forms = document.querySelector('#resultado');
+
+
     if (tipo.value !== "" && year.value !== "") {
-        botonCalcular(tipo, year);
+        if (forms.children.length === 0) {
+            botonCalcular(tipo, year);
+        } else {
+            forms.removeChild(forms.children[0])
+            botonCalcular(tipo, year);
+        }
     } else {
         setTimeout(sacarError, 500);
     }
@@ -41,14 +49,7 @@ function botonCalcular(tipo, year) {
     calculo.calcularSeguro();
 
     calculo.mostrarInfoHTML();
-
-    console.log(tipoSeguro.value);
-    
-    console.log(calculo.gama);
-    
-    
-    console.log(calculo);
-    
+  
 }
 
 function sacarError() {
@@ -60,13 +61,11 @@ function sacarError() {
     alerta.textContent = "Todos los campos son OBLIGATORIOS";
 
     console.log(alerta);
-    
+
     if (forms.children.length === 0) {
         forms.insertBefore(alerta, forms.children[0]);       
-
     } else {
         forms.removeChild(forms.children[0])
         forms.insertBefore(alerta, forms.children[0]);
     }
-
 }

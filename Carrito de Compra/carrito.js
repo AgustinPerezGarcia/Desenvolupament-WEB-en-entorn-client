@@ -1,6 +1,16 @@
-document.addEventListener("DOMContentLoaded", carrito);
+document.addEventListener("DOMContentLoaded", () => {
+    // Cargar carrito desde localStorage al iniciar
+    const almacen = localStorage.getItem('carrito');
+    if (almacen) {
+        const datos = JSON.parse(almacen);
+        cursos.length = 0;
+        cursos.push(...datos);
+        agregarCarrito();
+    }
+    carrito();
+});
 
-    const cursos = [];
+let cursos = [];
 
 function carrito() {
     const botones = document.querySelectorAll('.agregar-carrito');
@@ -10,14 +20,14 @@ function carrito() {
         e.addEventListener("click", agregarCarrito);
     });
 
-
     document.querySelector('#vaciar-carrito').addEventListener('click', borrarCarrito);
     document.querySelector('#carrito').addEventListener('click', quitar1Curso);
-   
 }
 
 // Guarda la información del curso seleccionado en el array "cursos"
 function guardarCurso(e) {
+    e.preventDefault();
+    
     const infoCurso = e.target.parentElement.parentElement;
 
     const imgCurso = infoCurso.querySelector('img').src;
@@ -27,10 +37,10 @@ function guardarCurso(e) {
     const precio = infoCurso.querySelector('.precio span').textContent;
     const id = parseInt(e.target.getAttribute('data-id'));
 
-    const existe = cursos.some(curso => curso.id === id);
+    const index = cursos.findIndex(curso => curso && curso.id === id);
 
-    if (existe) {
-        cursos[id].cant++;
+    if (index !== -1) {
+        cursos[index].cant++;
     } else {
         const curso = {
             imagen: imgCurso,
@@ -42,7 +52,7 @@ function guardarCurso(e) {
             cant: 1,
         };
 
-        cursos[id] = curso;
+        cursos.push(curso);
     }
 
     console.table(cursos);
@@ -60,6 +70,9 @@ function agregarCarrito() {
     });
 
     carrito.innerHTML = carro;
+
+    // Guardar carrito en localStorage
+    localStorage.setItem('carrito', JSON.stringify(cursos));
 }
 
 // Vacía completamente el carrito y limpia la tabla
@@ -67,22 +80,33 @@ function borrarCarrito() {
     const carrito = document.querySelector('#carrito tbody');
     cursos.length = 0;
     carrito.innerHTML = "";
+
+    // Vaciar localStorage también
+    localStorage.removeItem('carrito');
 }
 
 // Quita una unidad de un curso del carrito o lo elimina si queda a cero
 function quitar1Curso(e) {
+    if (!e.target.classList.contains('borrar-curso')) return;
+
     const id = parseInt(e.target.getAttribute('data-id'));
-    
-    if (cursos[id].cant === 1) {
-        borrarCurso(id);
-    } else {
-        cursos[id].cant--;
-        agregarCarrito();
+    const index = cursos.findIndex(curso => curso && curso.id === id);
+
+    if (index !== -1) {
+        if (cursos[index].cant === 1) {
+            borrarCurso(id);
+        } else {
+            cursos[index].cant--;
+            agregarCarrito();
+        }
     }
 }
 
 // Elimina un curso del carrito por completo y actualiza la tabla
 function borrarCurso(id) {
-    delete cursos[id];
-    agregarCarrito();
+    const index = cursos.findIndex(curso => curso && curso.id === id);
+    if (index !== -1) {
+        cursos.splice(index, 1);
+        agregarCarrito();
+    }
 }
