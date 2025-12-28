@@ -1,225 +1,308 @@
-<script setup>
-  import { reactive, ref, watch } from 'vue';
-  import Presupuesto from './components/Presupuesto.vue';
-  import ControlPresupuesto from './components/ControlPresupuesto.vue';
-  import Modal from './components/Modal.vue';
-  import iconoNuevoGasto from './assets/img/nuevo-gasto.svg';
-  import { generaId } from './helpers';
-  import Gasto from './components/Gasto.vue';
+    <script setup>
+    import { reactive, ref, watch, computed, onMounted } from 'vue';
+    import Presupuesto from './components/Presupuesto.vue';
+    import ControlPresupuesto from './components/ControlPresupuesto.vue';
+    import Modal from './components/Modal.vue';
+    import iconoNuevoGasto from './assets/img/nuevo-gasto.svg';
+    import { generaId } from './helpers';
+    import Gasto from './components/Gasto.vue';
+    import Filtro from './components/Filtro.vue';
 
-  const presupuesto = ref(0);
-  const disponible = ref(0);
-  const gastado = ref(0)
-  const modal = reactive({
-    mostrar: false,
-    animar: false
-  });
-  const gasto = reactive({
-    nombre: '',
-    cantidad: '',
-    categoria: '',
-    id: null,
-    fecha: new Date()
-  })
-  const gastos = ref([]);
+    const presupuesto = ref(0);
+    const disponible = ref(0);
+    const gastado = ref(0)
+    const modal = reactive({
+        mostrar: false,
+        animar: false
+    });
+    const gasto = reactive({
+        nombre: '',
+        cantidad: '',
+        categoria: '',
+        id: null,
+        fecha: new Date()
+    })
+    const gastos = ref([]);
+    const filtro = ref('');
 
-  function definirPresupuesto(cantidad){
-      presupuesto.value = cantidad;
-      disponible.value = cantidad;
-  }
-
-  function mostrarModal() {
-    modal.mostrar = true;
-    setTimeout(()=>{
-      modal.animar = true;
-    },500)
-  }
-
-  function ocultarModal() {
-    setTimeout(()=>{
-      modal.mostrar = false;
-    },500)
-    modal.animar = false;
-  }
-
-  function guardarGasto() {
-    gasto.id = generaId();
-    gastos.value.push({...gasto});
-    reiniciarGasto();
-    ocultarModal();
-  }
-
-  function reiniciarGasto() {
-    gasto.nombre = ''
-    gasto.cantidad = ''
-    gasto.categoria = ''
-    gasto.id = null
-    gasto.fecha = new Date()
-  }
-
-  watch(gastos, () =>{
-  gastado.value = gastos.value.reduce(
-      (total, gasto) => total + gasto.cantidad,
-      0
-    );
-    disponible.value = presupuesto.value - gastado.value;
-    },{
-      deep: true
+    function definirPresupuesto(cantidad){
+        presupuesto.value = cantidad;
+        disponible.value = cantidad;
     }
-  )
 
-</script>
+    function mostrarModal() {
+        modal.mostrar = true;
+        setTimeout(()=>{
+        modal.animar = true;
+        },500)
+    }
 
-<template>
+    function ocultarModal() {
+        setTimeout(()=>{
+        modal.mostrar = false;
+        },500)
+        modal.animar = false;
+    }
 
-  <div      
-    :class="{fijar:modal.mostrar}"
-  >
+    function agregarGasto() {
+    if (gasto.id) {
+        const index = gastos.value.findIndex(g => g.id === gasto.id);
+        gastos.value[index] = { ...gasto };
+    } else {
+        guardarGasto();
+    }
+    ocultarModal();
+    }
 
-    <header>  
+    function guardarGasto() {
+        gasto.id = generaId();
+        gastos.value.push({...gasto});
+        reiniciarGasto();
+    }
 
-      <h1>Planificador de Gastos</h1>
+    function reiniciarGasto() {
+        gasto.nombre = ''
+        gasto.cantidad = ''
+        gasto.categoria = ''
+        gasto.id = null
+        gasto.fecha = new Date()
+    }
 
-      <div class="contenedor-header contenedor sombra">
-        <Presupuesto 
+    function seleccionarGasto(id) {
+        const gastoV = gastos.value.find(element => element.id === id);
+        Object.assign(gasto, gastoV);
         
-          v-if="presupuesto === 0"
-        
-          @definir-presupuesto="definirPresupuesto"
-          
-        />
-        <ControlPresupuesto
-          v-else
-          :presupuesto="presupuesto"
-          :disponible="disponible"
-          :gastado="gastado"
-        />
+        mostrarModal();
+    }
 
-      </div>
+    function eliminarGasto() {
+        gastos.value = gastos.value.filter(g => g.id !== gasto.id);
+        ocultarModal();
+    }
 
-    </header>
+    function resetearApp() {
+        const confirmar = confirm('¿Deseas reiniciar presupuesto y gastos?');
 
-    <main 
-      v-if="presupuesto !== 0"
+        if (confirmar) {
+            presupuesto.value = 0;
+            disponible.value = 0;
+            gastos.value = [];
+
+            localStorage.removeItem('presupuesto');
+            localStorage.removeItem('gastos');
+        }
+    }
+
+
+    watch(gastos, () =>{
+            gastado.value = gastos.value.reduce((total, gasto) => total + gasto.cantidad, 0 );
+            disponible.value = presupuesto.value - gastado.value;
+        },{
+            deep: true
+        }
+    )
+
+    watch(modal, ()=>{
+            if (modal.mostrar === false) {
+                reiniciarGasto();
+            }
+        }
+    )
+
+    const gastosFiltrados = computed(() => {
+        if (filtro.value) {
+            return gastos.value.filter(g => g.categoria === filtro.value);
+        }
+        return gastos.value;
+    });
+
+    watch(presupuesto, () => {
+        localStorage.setItem('presupuesto', presupuesto.value);
+    });
+
+    watch(
+        gastos,
+        () => {
+            localStorage.setItem('gastos', JSON.stringify(gastos.value));
+        },
+        { deep: true }
+    );
+
+    onMounted(() => {
+        const presupuestoLS = localStorage.getItem('presupuesto');
+        const gastosLS = localStorage.getItem('gastos');
+
+        if (presupuestoLS) {
+            presupuesto.value = Number(presupuestoLS);
+            disponible.value = Number(presupuestoLS);
+        }
+
+        if (gastosLS) {
+            gastos.value = JSON.parse(gastosLS);
+        }
+    });
+
+
+    </script>
+
+    <template>
+
+    <div      
+        :class="{fijar:modal.mostrar}"
     >
-      <div class="crear-gasto">
-        <img 
-          :src="iconoNuevoGasto" 
-          alt="icono nuevo gasto"
-          @click="mostrarModal"
-          >
-      </div>
-      <Modal
-        v-if="modal.mostrar === true"
-        :animar="modal.animar"
-        :disponible="disponible"
-        v-model:nombre="gasto.nombre"
-        v-model:cantidad="gasto.cantidad"
-        v-model:categoria="gasto.categoria"
-        @ocultar-modal="ocultarModal"
-        @guardar-gasto="guardarGasto"
-      />
-      <div class="listado-gastos contenedor">
-        <h2>{{gastos.length ? "Gastos:" : "NO hay gastos"}}</h2>
-        <Gasto
-          v-for="value in gastos"
-          :gasto="value"
-          :key="value.id"
+
+        <header>  
+
+        <h1>Planificador de Gastos</h1>
+
+        <div class="contenedor-header contenedor sombra">
+            <Presupuesto 
+            
+            v-if="presupuesto === 0"
+            
+            @definir-presupuesto="definirPresupuesto"
+            
+            />
+            <ControlPresupuesto
+            v-else
+            :presupuesto="presupuesto"
+            :disponible="disponible"
+            :gastado="gastado"
+            @reset-app="resetearApp"
+            />
+
+        </div>
+
+        </header>
+
+        <main 
+        v-if="presupuesto !== 0"
+        >
+        <div class="crear-gasto">
+            <img 
+            :src="iconoNuevoGasto" 
+            alt="icono nuevo gasto"
+            @click="mostrarModal"
+            >
+        </div>
+        <Modal
+            v-if="modal.mostrar === true"
+            :animar="modal.animar"
+            :disponible="disponible"
+            :id="gasto.id"
+            :cantidadGasto="gasto.cantidad"
+            v-model:nombre="gasto.nombre"
+            v-model:cantidad="gasto.cantidad"
+            v-model:categoria="gasto.categoria"
+            @ocultar-modal="ocultarModal"
+            @agregar-gasto="agregarGasto"
+            @eliminar-gasto="eliminarGasto"
         />
-      </div>
-    </main>
-  
-  </div>
+        <Filtro 
+            v-model:filtro="filtro" 
+        />
+        <div class="listado-gastos contenedor">
+            <h2>{{gastos.length ? "Gastos:" : "NO hay gastos"}}</h2>
+            <Gasto
+                v-for="value in gastosFiltrados"
+                :gasto="value"
+                :key="value.id"
+                @editar-gasto="seleccionarGasto"
+            />
+        </div>
+        </main>
 
-</template>
+    </div>
 
-<style>
-  :root {
-    --azul: #3b82f6;
-    --blanco: #FFF;
-    --gris-claro: #F5F5F5;
-    --gris: #94a3b8;
-    --gris-oscuro: #64748b;
-    --negro: #000;
-  }
+    </template>
 
-  html {
-    font-size: 62.5%;
-    box-sizing: border-box;
-  }
+    <style>
+    :root {
+        --azul: #3b82f6;
+        --blanco: #FFF;
+        --gris-claro: #F5F5F5;
+        --gris: #94a3b8;
+        --gris-oscuro: #64748b;
+        --negro: #000;
+    }
 
-  *,
-  *:before,
-  *:after {
-    box-sizing: inherit;
-  }
+    html {
+        font-size: 62.5%;
+        box-sizing: border-box;
+    }
 
-  body {
-    font-size: 1.6rem;
-    font-family: "Lato", sans-serif;
-    background-color: var(--gris-claro);
-  }
+    *,
+    *:before,
+    *:after {
+        box-sizing: inherit;
+    }
 
-  h1 {
-    font-size: 4rem;
-  }
+    body {
+        font-size: 1.6rem;
+        font-family: "Lato", sans-serif;
+        background-color: var(--gris-claro);
+    }
 
-  h2 {
-    font-size: 3rem;
-  }
+    h1 {
+        font-size: 4rem;
+    }
 
-  header {
-    background-color: var(--azul);
-  }
+    h2 {
+        font-size: 3rem;
+    }
 
-  header h1 {
-    padding: 3rem 0;
-    margin: 0;
-    color: var(--blanco);
-    text-align: center;
-  }
+    header {
+        background-color: var(--azul);
+    }
 
-  .contenedor{
-    width: 90%;
-    max-width: 80rem;
-    margin: 0 auto;
-  }
+    header h1 {
+        padding: 3rem 0;
+        margin: 0;
+        color: var(--blanco);
+        text-align: center;
+    }
 
-  .contenedor-header{
-    margin-top: -5rem;
-    transform: translateY(5rem);
-    padding: 5rem;
-  }
+    .contenedor{
+        width: 90%;
+        max-width: 80rem;
+        margin: 0 auto;
+    }
 
-  .sombra{
-    box-shadow: 0 10px 15px -3px #0000001a;
-    background-color: var(--blanco);
-    border-radius: 1.2rem;
-    padding: 5rem;
-  }
+    .contenedor-header{
+        margin-top: -5rem;
+        transform: translateY(5rem);
+        padding: 5rem;
+    }
 
-  .crear-gasto{
-    position: fixed;
-    bottom: 5rem;
-    right: 5rem;
-  }
+    .sombra{
+        box-shadow: 0 10px 15px -3px #0000001a;
+        background-color: var(--blanco);
+        border-radius: 1.2rem;
+        padding: 5rem;
+    }
 
-  .crear-gasto img{
-    width: 5rem;
-    cursor: pointer;
-  }
+    .crear-gasto{
+        position: fixed;
+        bottom: 5rem;
+        right: 5rem;
+    }
 
-  .listado-gastos{
-    margin-top: 10rem;
-  }
+    .crear-gasto img{
+        width: 5rem;
+        cursor: pointer;
+    }
 
-  .listado-gastos h2{
-    font-weight: 900;
-    color: var(--gris-oscuro);
-  }
+    .listado-gastos{
+        margin-top: 10rem;
+    }
 
-  .fijar{
-    overflow: hidden;
-    height: 98vh;
-  }
-</style>
+    .listado-gastos h2{
+        font-weight: 900;
+        color: var(--gris-oscuro);
+    }
+
+    .fijar{
+        overflow: hidden;
+        height: 98vh;
+    }
+    </style>

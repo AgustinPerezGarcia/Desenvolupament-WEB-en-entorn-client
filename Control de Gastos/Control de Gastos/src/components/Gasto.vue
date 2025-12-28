@@ -16,6 +16,8 @@
         }
     })
 
+    const emit = defineEmits(['editar-gasto'])
+
     const diccionarioIconos = {
         ahorro: IconoAhorro,
         comida: IconoComida,
@@ -33,7 +35,7 @@
             <img :src="diccionarioIconos[gasto.categoria]" alt="Icono gasto" class="icono">
             <div class="detalles">
                 <p class="categoria">{{ gasto.categoria }}</p>
-                <p class="nombre">{{ gasto.nombre }}</p>
+                <p v-on:click="$emit('editar-gasto', gasto.id)" class="nombre">{{ gasto.nombre }}</p>
                 <p class="fecha">Fecha <span>{{ gasto.fecha.toLocaleDateString('es-Es', opciones) }}</span></p>
             </div>
         </div>

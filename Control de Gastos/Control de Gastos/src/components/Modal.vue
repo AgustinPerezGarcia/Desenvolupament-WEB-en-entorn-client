@@ -1,11 +1,11 @@
 <script setup>
-    import { ref } from 'vue';
+    import { ref, watch } from 'vue';
     import cerrarModal from '../assets/img/cerrar.svg';
     import Alerta from './Alerta.vue';
 
     const error = ref('');
 
-    const emit = defineEmits(['ocultar-modal','update:nombre','update:cantidad','update:categoria','guardar-gasto'])
+    const emit = defineEmits(['ocultar-modal','update:nombre','update:cantidad','update:categoria','agregar-gasto','eliminar-gasto'])
 
     const props = defineProps({
         animar: {
@@ -27,8 +27,18 @@
         disponible: {
             type: Number,
             required: true
+        },
+        id: {
+            type: [String, null],
+            required: true
+        },
+        cantidadGasto: {
+            type: [String, Number],
+            required: true
         }
     })
+
+    const cantidadAntigua = ref(0);
 
     function ocultarModal() {
         emit('ocultar-modal');
@@ -43,22 +53,46 @@
                 error.value = '';
             }, 2000);
             return
-        } if (cantidad.value < 1){
+        } 
+        
+        if (cantidad.value < 1){
             error.value = 'LA CANTIDAD DEBE SER SUPERIOR A 0'
             setTimeout(() => {
                 error.value = '';
             }, 2000);
             return
-        } if (cantidad.value > props.disponible) {
+        } 
+        
+        if(!props.id){ 
+            if (cantidad.value > props.disponible) {
+                error.value = 'HAS EXCEDIDO EL PRESUPUESTO';
+                setTimeout(() => {
+                    error.value = '';
+                }, 2000);
+                return
+            }
+
+        }else{
+            const nuevaCantidad = Number(cantidad.value);
+            const limite = cantidadAntigua.value + props.disponible;
+
+            if (nuevaCantidad > limite) {
             error.value = 'HAS EXCEDIDO EL PRESUPUESTO';
-            setTimeout(() => {
-                error.value = '';
-            }, 2000);
-            return
+            setTimeout(() => (error.value = ''), 2000);
+            return;
+            }
+
         }
-        emit('guardar-gasto');
+        emit('agregar-gasto');
 
     }
+
+    watch(() => props.id,
+    () => {
+        cantidadAntigua.value = Number(props.cantidad);
+    },
+    { immediate: true }
+    );
 
 </script>
 <template>
@@ -73,7 +107,7 @@
             :class="[ animar ? 'animar' : 'cerrar']"
         >
             <form class="nuevo-gasto" @submit.prevent="validarGasto">
-                <legend>Añadir Gasto</legend>
+                <legend>{{id ? 'Guardar Cambios' : 'Añadir Gasto'}}</legend>
 
                 <Alerta v-if="error">{{ error }}</Alerta> 
 
@@ -85,16 +119,16 @@
                         placeholder="Añade el nombre del Gasto"
                         :value="nombre"
                         @input="$emit('update:nombre', $event.target.value)"
-                        />
+                    />
                 </div>
                 <div class="campo">
                     <label for="cantidad">Cantidad:</label>
                     <input 
-                    type="number"
-                    id="cantidad"
-                    placeholder="Añade la Cantidad"
-                    :value="cantidad"
-                    @input="$emit('update:cantidad', +$event.target.value)"
+                        type="number"
+                        id="cantidad"
+                        placeholder="Añade la Cantidad"
+                        :value="cantidad"
+                        @input="$emit('update:cantidad', +$event.target.value)"
                     />
                 </div>
                 <div class="campo">
@@ -116,9 +150,17 @@
                 </div>
                 <input
                     type="submit"
-                    value="Añadir Gasto"
+                    :value="[id ? 'Guardar Cambios' : 'Añadir Gasto']"
                 >
             </form>
+            <input
+                v-if="id"
+                type="button"
+                value="Eliminar Gasto"
+                class="btn-eliminar"
+                @click="emit('eliminar-gasto')"
+            />
+
         </div>
     </div>
 </template>
@@ -195,4 +237,16 @@
     .contenedor-formulario.cerrar{
         opacity: 0;
     }
+    .btn-eliminar{ 
+        border-radius: 1rem; 
+        border:none; 
+        padding: 1rem; 
+        width: 100%; 
+        background-color: #ef4444; 
+        font-weight: 700; 
+        font-size: 2.2rem; 
+        color: var(--blanco); 
+        margin-top: 10rem; 
+        cursor: pointer; 
+    } 
 </style>
